@@ -190,8 +190,8 @@
 
                 <div class="flex gap-2">
                     <input type="text" id="trackInput" placeholder="Enter Reference Code (e.g. REQ-98421)" class="flex-grow text-xs p-3 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500 font-mono">
-                    <button onclick="searchStatus()" class="bg-brand-900 hover:bg-slate-800 text-white px-5 rounded-xl font-semibold text-xs transition shadow">
-                        Track Now
+                    <button onclick="searchStatus()" class="bg-brand-900 hover:bg-slate-800 text-white px-5 rounded-xl font-semibold text-xs transition shadow flex items-center gap-2">
+                        <i class="fa-solid fa-arrows-rotate"></i> Track Status
                     </button>
                 </div>
 
@@ -210,6 +210,17 @@
         window.onload = function() {
             initSupabaseClient();
         };
+
+        // REAL-TIME LISTENER: Kapag nagbago ang data sa Admin Portal sa kabilang tab
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'edulink_requests') {
+                documentRequests = JSON.parse(e.newValue || '[]');
+                // Auto update result view kung kasalukuyang nakatingin sa tracking tab
+                if (!document.getElementById('viewTrack').classList.contains('hidden')) {
+                    searchStatus(false); 
+                }
+            }
+        });
 
         function switchTab(tab) {
             document.getElementById('viewRequest').classList.toggle('hidden', tab !== 'request');
@@ -239,7 +250,6 @@
             const totalAmount = calculateTotal();
             const refCode = 'REQ-' + Math.floor(10000 + Math.random() * 90000);
             
-            // Handle optional image conversion
             let receiptBase64 = null;
             const fileInput = document.getElementById('receiptImg');
             if (fileInput.files && fileInput.files[0]) {
@@ -261,6 +271,7 @@
             };
 
             // Save locally
+            documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
             documentRequests.unshift(newRequest);
             localStorage.setItem('edulink_requests', JSON.stringify(documentRequests));
 
@@ -277,11 +288,18 @@
             searchStatus();
         }
 
-        function searchStatus() {
+        async function searchStatus(fetchCloud = true) {
             const query = document.getElementById('trackInput').value.trim().toLowerCase();
             const container = document.getElementById('trackResultContainer');
             
             if (!query) return;
+
+            // Fetch pinakabagong Cloud Data kung nakakabit ang Supabase
+            if (fetchCloud && supabaseClient) {
+                await pullFromSupabaseCloud();
+            } else {
+                documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
+            }
 
             const match = documentRequests.find(r => r.refCode.toLowerCase() === query || r.studentId.toLowerCase() === query);
 
@@ -346,6 +364,17 @@
             if (url && key && window.supabase) {
                 try { supabaseClient = window.supabase.createClient(url, key); } catch(e){}
             }
+        }
+
+        async function pullFromSupabaseCloud() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('edulink_requests').select('*');
+                if (data && !error) {
+                    documentRequests = data.map(item => item.data);
+                    localStorage.setItem('edulink_requests', JSON.stringify(documentRequests));
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function syncToSupabase(record) {
