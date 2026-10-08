@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="authGate" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="bg-slate-100 p-3 rounded-full inline-block text-slate-700">
+                <i class="fa-solid fa-user-shield text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold">Registrar Login</h2>
+            <input type="password" id="passcode" placeholder="Enter PIN (Default: 1234)" class="w-full text-center text-lg p-2.5 rounded-lg border">
+            <button onclick="authenticate()" class="w-full bg-slate-800 text-white font-semibold py-2.5 rounded-lg">Unlock Dashboard</button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="adminDashboard" class="hidden max-w-7xl mx-auto p-6 space-y-6">
+        <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">Registrar Control Center</h1>
+                <p class="text-xs text-slate-500">Manage incoming requests & verify payments</p>
+            </div>
+            <button onclick="location.reload()" class="bg-rose-600 text-white text-xs px-4 py-2 rounded-lg">Lock Session</button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
+                    <tr>
+                        <th class="p-3">Ref Code</th>
+                        <th class="p-3">Student</th>
+                        <th class="p-3">Amount</th>
+                        <th class="p-3">GCash Ref</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let documentRequests = [];
+
+        function authenticate() {
+            const pin = document.getElementById('passcode').value;
+            if (pin === '1234') {
+                document.getElementById('authGate').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadData();
+            } else {
+                alert('Invalid Passcode');
+            }
+        }
+
+        function loadData() {
+            documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('adminTableBody');
+            if (documentRequests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No requests found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = documentRequests.map(r => `
+                <tr>
+                    <td class="p-3 font-mono font-bold">${r.refCode}</td>
+                    <td class="p-3">${r.fullName} (${r.studentId})</td>
+                    <td class="p-3 font-bold">₱${r.amount.toFixed(2)}</td>
+                    <td class="p-3 font-mono">${r.gcashRef || 'N/A'}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] bg-amber-100 text-amber-800">${r.status}</span></td>
+                    <td class="p-3 text-right">
+                        <select onchange="updateStatus('${r.refCode}', this.value)" class="p-1 rounded border text-[11px]">
+                            <option value="Pending Payment Verification" ${r.status === 'Pending Payment Verification' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing Documents" ${r.status === 'Processing Documents' ? 'selected' : ''}>Processing</option>
+                            <option value="Ready for Pickup" ${r.status === 'Ready for Pickup' ? 'selected' : ''}>Ready for Pickup</option>
+                            <option value="Completed" ${r.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStatus(refCode, newStatus) {
+            const req = documentRequests.find(r => r.refCode === refCode);
+            if (req) {
+                req.status = newStatus;
+                localStorage.setItem('edulink_requests', JSON.stringify(documentRequests));
+                alert(`Updated status to ${newStatus}`);
+            }
+        }
+    </script>
+</body>
+</html>
