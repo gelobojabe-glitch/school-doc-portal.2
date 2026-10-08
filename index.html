@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Document Request Portal - Edulink Solutions</title>
+    <title>Edulink Solutions - Document Request Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
+    <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
@@ -19,14 +19,16 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
+                        navy: {
+                            800: '#0c3a53',
+                            900: '#072b3f',
+                        },
                         brand: {
                             50: '#f0f9ff',
                             100: '#e0f2fe',
                             500: '#0284c7',
-                            600: '#0369a1',
+                            600: '#0277b6',
                             700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
                         }
                     }
                 }
@@ -34,183 +36,251 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+<body class="bg-[#f8fafc] text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
     <!-- HEADER -->
-    <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-30">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+    <header class="bg-[#0b3852] text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <div class="bg-white p-2 rounded-lg text-brand-900 shadow">
+                <div class="bg-white p-2 rounded-lg text-[#0b3852] shadow-sm">
                     <i class="fa-solid fa-graduation-cap text-2xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">Edulink Solutions</h1>
-                    <p class="text-xs text-brand-100">Registrar Document Request Portal</p>
+                    <h1 class="font-bold text-xl leading-tight">Edulink Solutions</h1>
+                    <p class="text-xs text-slate-300">Document Request Portal • PH Private Schools</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="switchTab('request')" id="tabBtnRequest" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-brand-900 shadow transition">New Request</button>
-                <button onclick="switchTab('track')" id="tabBtnTrack" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-800 text-white hover:bg-brand-700 transition">Track Status</button>
+            
+            <div class="flex items-center space-x-3">
+                <div id="statusBadge" class="hidden sm:flex items-center gap-2 bg-[#082a3e] text-emerald-400 text-xs px-3 py-1.5 rounded-lg font-medium border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span id="statusBadgeText">Supabase: Disconnected (Local Storage Active)</span>
+                </div>
+                <div class="hidden md:flex items-center gap-1.5 bg-[#082a3e] text-emerald-400 text-xs px-3 py-1.5 rounded-lg font-medium border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    SY 2026-2027
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- NAVIGATION TABS -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex space-x-8">
+                <button onclick="switchTab('request')" id="tabBtnRequest" class="py-3.5 px-1 border-b-2 border-brand-600 font-semibold text-sm text-brand-600 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> Student Request Form
+                </button>
+                <button onclick="switchTab('track')" id="tabBtnTrack" class="py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> Status Tracker
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- TOAST NOTIFICATION CONTAINER -->
         <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full"></div>
 
-        <!-- TAB 1: NEW REQUEST FORM -->
+        <!-- TAB 1: REQUEST FORM -->
         <div id="viewRequest" class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                    <i class="fa-solid fa-file-signature text-brand-600"></i> Online Document Application
-                </h2>
-                <p class="text-xs text-slate-500 mb-6">Fill out your details and select the credentials you wish to request from the Registrar.</p>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-10">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-1">Request Official School Documents</h2>
+                    <p class="text-xs text-slate-500">Fill in the required information. Payment instructions via GCash will be generated automatically.</p>
+                </div>
 
-                <form id="requestForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <form id="requestForm" onsubmit="openPaymentModal(event)" class="space-y-8">
                     
-                    <!-- STUDENT DETAILS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- SECTION 1: STUDENT INFORMATION -->
+                    <div>
+                        <h3 class="text-xs font-bold text-[#0277b6] uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card"></i> Student Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Student Number / LRN *</label>
+                                <input type="text" id="studentId" required placeholder="e.g. 2023-10492" class="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Full Name *</label>
+                                <input type="text" id="fullName" required placeholder="Juan Dela Cruz" class="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Contact Mobile Number (for SMS) *</label>
+                                <input type="tel" id="contactNumber" required placeholder="09171234567" class="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email Address *</label>
+                                <input type="email" id="email" required placeholder="juan@example.com" class="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Academic Program / Grade Level *</label>
+                                <select id="academicLevel" required class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                                    <option value="">Select Option</option>
+                                    <option value="Senior High School">Senior High School</option>
+                                    <option value="College / Undergraduate">College / Undergraduate</option>
+                                    <option value="Alumni / Graduate">Alumni / Graduate</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Year Last Attended / Graduated *</label>
+                                <input type="text" id="yearAttended" required placeholder="e.g. 2025" class="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: SELECT DOCUMENTS REQUESTED -->
+                    <div>
+                        <h3 class="text-xs font-bold text-[#0277b6] uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-file-lines"></i> Select Documents Requested
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Transcript of Records (TOR)" data-price="300" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-file-text text-brand-600"></i> Transcript of Records (TOR)</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱300.00</span>
+                            </label>
+
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Certificate of Graduation" data-price="150" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-certificate text-brand-600"></i> Certificate of Graduation</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱150.00</span>
+                            </label>
+
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Certificate of Enrollment / Registration" data-price="100" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-file-lines text-brand-600"></i> Certificate of Enrollment / Registration</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱100.00</span>
+                            </label>
+
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Certificate of Good Moral Character" data-price="150" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-award text-brand-600"></i> Certificate of Good Moral Character</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱150.00</span>
+                            </label>
+
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Diploma (Duplicate Copy)" data-price="500" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-graduation-cap text-brand-600"></i> Diploma (Duplicate Copy)</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱500.00</span>
+                            </label>
+
+                            <label class="border border-slate-200 p-3.5 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" value="Form 137 / SF10 (School-to-School Transfer)" data-price="200" class="doc-checkbox w-4 h-4 text-brand-600 rounded border-slate-300" onchange="calculateTotal()">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-folder text-brand-600"></i> Form 137 / SF10</span>
+                                </div>
+                                <span class="text-xs font-bold text-slate-800">₱200.00</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: PURPOSE & FULFILLMENT -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
-                            <input type="text" id="fullName" required placeholder="Juan Dela Cruz" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Purpose of Request *</label>
+                            <select id="purpose" required class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                                <option value="">Select Purpose</option>
+                                <option value="Employment">Employment Application</option>
+                                <option value="Further Studies">Further Studies / Transfer</option>
+                                <option value="Board Exam">Board Examination / PRC</option>
+                                <option value="Personal Copy">Personal Copy</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Student ID / LRN Number *</label>
-                            <input type="text" id="studentId" required placeholder="2023-10948" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Number *</label>
-                            <input type="tel" id="contactNumber" required placeholder="09171234567" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Academic Level *</label>
-                            <select id="academicLevel" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-brand-500">
-                                <option value="">Select Level</option>
-                                <option value="Senior High School">Senior High School</option>
-                                <option value="College / Undergraduate">College / Undergraduate</option>
-                                <option value="Alumni / Graduate">Alumni / Graduate</option>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Fulfillment Option *</label>
+                            <select id="fulfillment" required class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                                <option value="On-Campus Pickup (Free)">On-Campus Pickup (Free)</option>
+                                <option value="Courier Delivery (LBC Add-on)">Courier Delivery (LBC Add-on)</option>
                             </select>
                         </div>
                     </div>
 
-                    <hr class="border-slate-100">
-
-                    <!-- DOCUMENT SELECTION -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2">Select Document(s) Needed *</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <label class="border border-slate-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" value="Official Transcript of Records (TOR)" data-price="250" class="doc-checkbox w-4 h-4 text-brand-600 rounded" onchange="calculateTotal()">
-                                    <span class="text-xs font-medium text-slate-800">Transcript of Records (TOR)</span>
-                                </div>
-                                <span class="text-xs font-bold text-slate-600">₱250.00</span>
-                            </label>
-
-                            <label class="border border-slate-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" value="Diploma Certificate (Copy)" data-price="200" class="doc-checkbox w-4 h-4 text-brand-600 rounded" onchange="calculateTotal()">
-                                    <span class="text-xs font-medium text-slate-800">Diploma Copy</span>
-                                </div>
-                                <span class="text-xs font-bold text-slate-600">₱200.00</span>
-                            </label>
-
-                            <label class="border border-slate-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" value="Form 137 / SF10" data-price="150" class="doc-checkbox w-4 h-4 text-brand-600 rounded" onchange="calculateTotal()">
-                                    <span class="text-xs font-medium text-slate-800">Form 137 / SF10</span>
-                                </div>
-                                <span class="text-xs font-bold text-slate-600">₱150.00</span>
-                            </label>
-
-                            <label class="border border-slate-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" value="Certificate of Good Moral Character" data-price="100" class="doc-checkbox w-4 h-4 text-brand-600 rounded" onchange="calculateTotal()">
-                                    <span class="text-xs font-medium text-slate-800">Good Moral Certificate</span>
-                                </div>
-                                <span class="text-xs font-bold text-slate-600">₱100.00</span>
-                            </label>
+                    <!-- SECTION 4: TOTAL & SUBMIT BAR -->
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Payable Amount:</span>
+                            <div class="text-3xl font-extrabold text-[#0277b6]" id="totalDisplay">₱ 0.00</div>
                         </div>
+                        <button type="submit" class="w-full sm:w-auto bg-[#0277b6] hover:bg-[#026296] text-white font-bold px-8 py-3.5 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-paper-plane"></i> Proceed to Payment & Submit
+                        </button>
                     </div>
 
-                    <!-- TOTAL DISPLAY -->
-                    <div class="bg-brand-50 p-4 rounded-xl border border-brand-100 flex justify-between items-center">
-                        <span class="text-xs font-semibold text-brand-900 uppercase">Total Processing Fee:</span>
-                        <span class="text-xl font-bold text-brand-900" id="totalDisplay">₱0.00</span>
-                    </div>
-
-                    <hr class="border-slate-100">
-
-                    <!-- GCASH PAYMENT SECTION -->
-                    <div class="space-y-3">
-                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-qrcode text-blue-500"></i> GCash Payment Step
-                        </h3>
-                        <p class="text-xs text-slate-500">Please scan the QR code or send payment to the number below, then provide your Reference Number.</p>
-                        
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center gap-4">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=09171234567" alt="GCash QR Code" class="w-32 h-32 rounded-lg border border-slate-200 shadow-sm bg-white p-1">
-                            <div class="space-y-1 text-center sm:text-left">
-                                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold uppercase">Official GCash Account</span>
-                                <p class="text-sm font-bold text-slate-900">EDULINK REGISTRAR OFFICE</p>
-                                <p class="text-xs font-mono text-slate-600">0917-123-4567</p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">GCash Reference No. *</label>
-                                <input type="text" id="gcashRef" required placeholder="e.g. 1002 9847 12" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 font-mono outline-none focus:ring-2 focus:ring-brand-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Upload Receipt Screenshot (Optional)</label>
-                                <input type="file" id="receiptImg" accept="image/*" onchange="previewReceipt(event)" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 bg-white">
-                                <div id="receiptPreviewContainer" class="mt-2 hidden">
-                                    <img id="receiptPreview" src="" alt="Receipt Preview" class="w-20 h-20 object-cover rounded border border-slate-300">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full bg-brand-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow-lg text-sm">
-                        Submit Application Request
-                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 2: TRACKING VIEW -->
+        <!-- TAB 2: STATUS TRACKER -->
         <div id="viewTrack" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-10 space-y-6">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-magnifying-glass text-brand-600"></i> Track Request Status
-                    </h2>
-                    <p class="text-xs text-slate-500">Enter your Reference Code or Student ID to check document processing progress.</p>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-1">Track Request Status</h2>
+                    <p class="text-xs text-slate-500">Enter your Reference Code or Student ID to check processing progress.</p>
                 </div>
 
                 <div class="flex gap-2">
-                    <input type="text" id="trackInput" placeholder="Enter Reference Code (e.g. REQ-98421)" class="flex-grow text-xs p-3 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500 font-mono">
-                    <button onclick="searchStatus()" class="bg-brand-900 hover:bg-slate-800 text-white px-5 rounded-xl font-semibold text-xs transition shadow flex items-center gap-2">
-                        <i class="fa-solid fa-arrows-rotate"></i> Track Status
+                    <input type="text" id="trackInput" placeholder="Enter Reference Code (e.g. REQ-98421)" class="flex-grow text-xs p-3.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand-500 font-mono">
+                    <button onclick="searchStatus()" class="bg-[#0b3852] hover:bg-slate-800 text-white px-6 rounded-xl font-semibold text-xs transition shadow flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i> Track Status
                     </button>
                 </div>
 
-                <!-- RECENT REQUESTS QUICK LINKS -->
-                <div id="recentRequestsContainer" class="hidden text-xs">
-                    <span class="text-slate-400 font-medium">Your Recent Requests:</span>
-                    <div id="recentRequestsList" class="flex flex-wrap gap-2 mt-1.5"></div>
-                </div>
-
-                <div id="trackResultContainer" class="hidden border-t pt-6 space-y-6">
-                    <!-- Dynamic Result Output -->
-                </div>
+                <div id="trackResultContainer" class="hidden border-t border-slate-100 pt-6"></div>
             </div>
         </div>
 
     </main>
+
+    <!-- GCASH PAYMENT MODAL -->
+    <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-blue-500"></i> GCash Payment Step
+                </h3>
+                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <p class="text-xs text-slate-500">Please scan the QR code or send payment to the number below, then input your GCash Reference Number.</p>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=09171234567" alt="GCash QR" class="w-24 h-24 rounded-lg bg-white p-1 border">
+                <div>
+                    <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold uppercase">Official GCash Account</span>
+                    <p class="text-xs font-bold text-slate-900 mt-1">EDULINK REGISTRAR OFFICE</p>
+                    <p class="text-xs font-mono text-slate-600">0917-123-4567</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">GCash Reference No. *</label>
+                    <input type="text" id="gcashRef" required placeholder="e.g. 1002 9847 12" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 font-mono outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Upload Receipt Screenshot (Optional)</label>
+                    <input type="file" id="receiptImg" accept="image/*" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 bg-white">
+                </div>
+            </div>
+
+            <button onclick="confirmSubmit()" class="w-full bg-[#0277b6] hover:bg-[#026296] text-white font-bold py-3 rounded-xl transition shadow text-xs">
+                Confirm & Finalize Request
+            </button>
+        </div>
+    </div>
 
     <script>
         let documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
@@ -218,10 +288,9 @@
 
         window.onload = function() {
             initSupabaseClient();
-            renderRecentRequests();
         };
 
-        // REAL-TIME STORAGE EVENT LISTENER (Para sa kabilang tab / window sync)
+        // REAL-TIME SYNC: Nakikinig sa kabilang tab (Admin Portal)
         window.addEventListener('storage', function(e) {
             if (e.key === 'edulink_requests') {
                 documentRequests = JSON.parse(e.newValue || '[]');
@@ -234,43 +303,46 @@
         function switchTab(tab) {
             document.getElementById('viewRequest').classList.toggle('hidden', tab !== 'request');
             document.getElementById('viewTrack').classList.toggle('hidden', tab !== 'track');
+
+            document.getElementById('tabBtnRequest').className = tab === 'request' ? 
+                'py-3.5 px-1 border-b-2 border-brand-600 font-semibold text-sm text-brand-600 flex items-center gap-2' : 
+                'py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2';
             
-            document.getElementById('tabBtnRequest').className = tab === 'request' ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-brand-900 shadow transition' : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-800 text-white hover:bg-brand-700 transition';
-            document.getElementById('tabBtnTrack').className = tab === 'track' ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-brand-900 shadow transition' : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-800 text-white hover:bg-brand-700 transition';
-            
-            if (tab === 'track') renderRecentRequests();
+            document.getElementById('tabBtnTrack').className = tab === 'track' ? 
+                'py-3.5 px-1 border-b-2 border-brand-600 font-semibold text-sm text-brand-600 flex items-center gap-2' : 
+                'py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2';
         }
 
         function calculateTotal() {
             const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
             let total = 0;
             checkboxes.forEach(cb => total += parseFloat(cb.dataset.price));
-            document.getElementById('totalDisplay').innerText = `₱${total.toFixed(2)}`;
+            document.getElementById('totalDisplay').innerText = `₱ ${total.toFixed(2)}`;
             return total;
         }
 
-        function previewReceipt(event) {
-            const file = event.target.files[0];
-            const container = document.getElementById('receiptPreviewContainer');
-            const img = document.getElementById('receiptPreview');
-            if (file) {
-                img.src = URL.createObjectURL(file);
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        async function handleFormSubmit(e) {
+        function openPaymentModal(e) {
             e.preventDefault();
             const selectedDocs = Array.from(document.querySelectorAll('.doc-checkbox:checked')).map(cb => cb.value);
-            
             if (selectedDocs.length === 0) {
-                showToast('Please select at least one document.', 'error');
+                showToast('Please select at least one document requested.', 'error');
+                return;
+            }
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        async function confirmSubmit() {
+            const gcashRef = document.getElementById('gcashRef').value.trim();
+            if (!gcashRef) {
+                showToast('Please enter your GCash Reference Number.', 'error');
                 return;
             }
 
-            const totalAmount = calculateTotal();
+            const selectedDocs = Array.from(document.querySelectorAll('.doc-checkbox:checked')).map(cb => cb.value);
             const refCode = 'REQ-' + Math.floor(10000 + Math.random() * 90000);
             
             let receiptBase64 = null;
@@ -281,32 +353,36 @@
 
             const newRequest = {
                 refCode: refCode,
-                fullName: document.getElementById('fullName').value,
                 studentId: document.getElementById('studentId').value,
+                fullName: document.getElementById('fullName').value,
                 contactNumber: document.getElementById('contactNumber').value,
+                email: document.getElementById('email').value,
                 academicLevel: document.getElementById('academicLevel').value,
+                yearAttended: document.getElementById('yearAttended').value,
                 documents: selectedDocs,
-                amount: totalAmount,
-                gcashRef: document.getElementById('gcashRef').value,
+                purpose: document.getElementById('purpose').value,
+                fulfillment: document.getElementById('fulfillment').value,
+                amount: calculateTotal(),
+                gcashRef: gcashRef,
                 receiptImg: receiptBase64,
-                status: 'Pending Payment Verification',
+                status: 'Pending Verification',
                 requestDate: new Date().toISOString()
             };
 
-            // Save locally
+            // Save Local
             documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
             documentRequests.unshift(newRequest);
             localStorage.setItem('edulink_requests', JSON.stringify(documentRequests));
 
-            // Sync to Supabase Cloud if configured
+            // Sync to Supabase Cloud
             await syncToSupabase(newRequest);
 
+            closePaymentModal();
             showToast(`Request Submitted! Ref Code: ${refCode}`);
             document.getElementById('requestForm').reset();
-            document.getElementById('receiptPreviewContainer').classList.add('hidden');
             calculateTotal();
 
-            // Auto navigate to tracking tab
+            // Navigate to Tracking
             document.getElementById('trackInput').value = refCode;
             switchTab('track');
             searchStatus();
@@ -315,10 +391,8 @@
         async function searchStatus(fetchCloud = true) {
             const query = document.getElementById('trackInput').value.trim().toLowerCase();
             const container = document.getElementById('trackResultContainer');
-            
             if (!query) return;
 
-            // Fetch latest Cloud Data kung nakakabit ang Supabase
             if (fetchCloud && supabaseClient) {
                 await pullFromSupabaseCloud();
             } else {
@@ -326,159 +400,48 @@
             }
 
             const match = documentRequests.find(r => r.refCode.toLowerCase() === query || r.studentId.toLowerCase() === query);
-
             container.classList.remove('hidden');
 
             if (!match) {
                 container.innerHTML = `
                     <div class="text-center py-6 text-slate-500 text-xs">
                         <i class="fa-solid fa-circle-exclamation text-amber-500 text-3xl mb-2"></i>
-                        <p class="font-semibold text-slate-700">No request record found for "${query}"</p>
+                        <p class="font-semibold text-slate-700">No record found for "${query}"</p>
                         <p>Please double-check your Reference Code or Student ID.</p>
                     </div>
                 `;
                 return;
             }
 
-            // VISUAL TRACKER STAGES
-            const stages = ['Pending Payment Verification', 'Processing Documents', 'Ready for Pickup', 'Completed'];
-            const currentStageIndex = stages.indexOf(match.status);
-
             const statusColors = {
-                'Pending Payment Verification': 'bg-amber-100 text-amber-800 border-amber-300',
+                'Pending Verification': 'bg-amber-100 text-amber-800 border-amber-300',
                 'Processing Documents': 'bg-blue-100 text-blue-800 border-blue-300',
                 'Ready for Pickup': 'bg-emerald-100 text-emerald-800 border-emerald-300',
                 'Completed': 'bg-slate-100 text-slate-800 border-slate-300'
             };
 
-            const docsFormatted = Array.isArray(match.documents) ? match.documents.join(', ') : match.documents;
-
             container.innerHTML = `
-                <!-- STATUS HEADER -->
-                <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-3 border-slate-200">
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-4 border-slate-200">
                         <div>
                             <span class="text-[10px] text-slate-400 font-mono uppercase">Reference Code</span>
-                            <h3 class="text-lg font-bold text-brand-900 font-mono">${match.refCode}</h3>
+                            <h3 class="text-xl font-bold text-[#0b3852] font-mono">${match.refCode}</h3>
                         </div>
-                        <span class="px-3 py-1 text-xs font-semibold rounded-full border ${statusColors[match.status] || 'bg-slate-100'} self-start sm:self-auto">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full border ${statusColors[match.status] || 'bg-slate-100'}">
                             ${match.status}
                         </span>
                     </div>
 
-                    <!-- VISUAL PROGRESS BAR -->
-                    <div class="py-4">
-                        <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-semibold">
-                            <div class="${currentStageIndex >= 0 ? 'text-brand-600' : 'text-slate-400'}">1. Verified</div>
-                            <div class="${currentStageIndex >= 1 ? 'text-brand-600' : 'text-slate-400'}">2. Processing</div>
-                            <div class="${currentStageIndex >= 2 ? 'text-brand-600' : 'text-slate-400'}">3. Ready</div>
-                            <div class="${currentStageIndex >= 3 ? 'text-brand-600' : 'text-slate-400'}">4. Completed</div>
-                        </div>
-                        <div class="w-full bg-slate-200 h-2 rounded-full mt-2 overflow-hidden flex">
-                            <div class="bg-brand-600 h-full transition-all duration-500" style="width: ${((currentStageIndex + 1) / 4) * 100}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- DETAILS GRID -->
-                    <div class="grid grid-cols-2 gap-3 text-xs pt-2">
-                        <div>
-                            <p class="text-slate-400">Student Name</p>
-                            <p class="font-semibold text-slate-800">${match.fullName}</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400">Student ID / LRN</p>
-                            <p class="font-semibold text-slate-800">${match.studentId}</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400">Requested Items</p>
-                            <p class="font-semibold text-slate-800">${docsFormatted}</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400">Date Applied</p>
-                            <p class="font-semibold text-slate-800">${new Date(match.requestDate).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400">GCash Ref No.</p>
-                            <p class="font-mono text-slate-800">${match.gcashRef}</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400">Total Paid</p>
-                            <p class="font-bold text-slate-900">₱${parseFloat(match.amount).toFixed(2)}</p>
-                        </div>
-                    </div>
-
-                    <!-- RECEIPT DOWNLOAD BUTTON -->
-                    <div class="pt-2 border-t border-slate-200 flex justify-end">
-                        <button onclick="downloadReceipt('${match.refCode}')" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
-                            <i class="fa-solid fa-download"></i> Save Acknowledgement Slip
-                        </button>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs pt-2">
+                        <div><p class="text-slate-400">Student Name</p><p class="font-semibold text-slate-800">${match.fullName}</p></div>
+                        <div><p class="text-slate-400">Student ID / LRN</p><p class="font-semibold text-slate-800">${match.studentId}</p></div>
+                        <div><p class="text-slate-400">Program / Level</p><p class="font-semibold text-slate-800">${match.academicLevel}</p></div>
+                        <div><p class="text-slate-400">Requested Documents</p><p class="font-semibold text-slate-800">${Array.isArray(match.documents) ? match.documents.join(', ') : match.documents}</p></div>
+                        <div><p class="text-slate-400">Fulfillment</p><p class="font-semibold text-slate-800">${match.fulfillment || 'On-Campus Pickup'}</p></div>
+                        <div><p class="text-slate-400">Total Amount</p><p class="font-bold text-slate-900">₱ ${parseFloat(match.amount).toFixed(2)}</p></div>
                     </div>
                 </div>
             `;
-        }
-
-        function renderRecentRequests() {
-            const container = document.getElementById('recentRequestsContainer');
-            const list = document.getElementById('recentRequestsList');
-            const requests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
-
-            if (requests.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            container.classList.remove('hidden');
-            list.innerHTML = requests.slice(0, 4).map(r => `
-                <button onclick="quickTrack('${r.refCode}')" class="bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 font-mono text-[11px] transition">
-                    ${r.refCode}
-                </button>
-            `).join('');
-        }
-
-        function quickTrack(refCode) {
-            document.getElementById('trackInput').value = refCode;
-            searchStatus();
-        }
-
-        function downloadReceipt(refCode) {
-            const match = documentRequests.find(r => r.refCode === refCode);
-            if (!match) return;
-
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Request Slip - ${match.refCode}</title>
-                    <style>
-                        body { font-family: sans-serif; padding: 30px; line-height: 1.5; color: #1e293b; }
-                        .ticket { border: 2px dashed #0284c7; padding: 25px; border-radius: 12px; max-width: 500px; margin: auto; }
-                        h2 { margin-top: 0; color: #0c4a6e; }
-                        .field { margin-bottom: 12px; }
-                        .label { font-size: 12px; color: #64748b; text-transform: uppercase; }
-                        .val { font-weight: bold; font-size: 14px; }
-                        .footer { margin-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; }
-                    </style>
-                </head>
-                <body>
-                    <div class="ticket">
-                        <h2>Edulink Registrar Office</h2>
-                        <p style="font-size: 12px; color: #64748b;">Document Request Acknowledgement</p>
-                        <hr>
-                        <div class="field"><div class="label">Reference Code</div><div class="val">${match.refCode}</div></div>
-                        <div class="field"><div class="label">Student Name</div><div class="val">${match.fullName}</div></div>
-                        <div class="field"><div class="label">Student ID</div><div class="val">${match.studentId}</div></div>
-                        <div class="field"><div class="label">Requested Items</div><div class="val">${Array.isArray(match.documents) ? match.documents.join(', ') : match.documents}</div></div>
-                        <div class="field"><div class="label">Total Amount Paid</div><div class="val">₱${parseFloat(match.amount).toFixed(2)}</div></div>
-                        <div class="field"><div class="label">Current Status</div><div class="val">${match.status}</div></div>
-                        <hr>
-                        <div class="footer">Present this slip or Reference Code upon claiming your documents.</div>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => { printWindow.print(); }, 500);
         }
 
         // SUPABASE SYNC HELPERS
@@ -486,7 +449,10 @@
             const url = localStorage.getItem('edulink_sp_url');
             const key = localStorage.getItem('edulink_sp_key');
             if (url && key && window.supabase) {
-                try { supabaseClient = window.supabase.createClient(url, key); } catch(e){}
+                try { 
+                    supabaseClient = window.supabase.createClient(url, key);
+                    document.getElementById('statusBadgeText').innerText = "Supabase: Connected";
+                } catch(e){}
             }
         }
 
