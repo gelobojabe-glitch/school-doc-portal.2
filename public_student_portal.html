@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edulink Solutions - Document Request Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0f9ff', 500: '#0284c7', 600: '#0369a1', 800: '#075985', 900: '#0c4a6e' }, gcash: '#005CE6' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- HEADER -->
+    <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-lg text-brand-900 shadow">
+                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Edulink Solutions</h1>
+                    <p class="text-xs text-brand-100">Document Request Portal • PH Private Schools</p>
+                </div>
+            </div>
+            <span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> SY 2026-2027
+            </span>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="bg-white border-b border-slate-200 sticky top-16 z-20 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8">
+            <button id="tab-request" onclick="switchTab('request')" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-brand-600 border-brand-600 flex items-center gap-2">
+                <i class="fa-solid fa-file-signature"></i> Student Request Form
+            </button>
+            <button id="tab-tracker" onclick="switchTab('tracker')" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass-location"></i> Status Tracker
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full"></div>
+
+        <!-- TAB 1: REQUEST FORM -->
+        <section id="view-request" class="tab-content space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="border-b border-slate-200 pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-slate-900">Request Official School Documents</h2>
+                    <p class="text-slate-500 text-sm mt-1">Fill in the required information. Payment instructions via GCash will be generated automatically.</p>
+                </div>
+
+                <form id="requestForm" onsubmit="handleRequestSubmit(event)" class="space-y-6">
+                    <div>
+                        <h3 class="text-sm font-semibold text-brand-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card"></i> Student Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Student Number / LRN *</label>
+                                <input type="text" id="studentId" required placeholder="e.g. 2023-10492" class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
+                                <input type="text" id="fullName" required placeholder="Juan Dela Cruz" class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Mobile Number *</label>
+                                <input type="tel" id="contactNumber" required placeholder="09171234567" pattern="^(09|\+639)\d{9}$" class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address *</label>
+                                <input type="email" id="email" required placeholder="juan@example.com" class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Academic Program / Grade Level *</label>
+                                <select id="academicLevel" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                                    <option value="">Select Option</option>
+                                    <option value="Senior High School (STEM)">Senior High School (STEM)</option>
+                                    <option value="BS Computer Science">BS Computer Science</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Year Last Attended *</label>
+                                <input type="text" id="yearGraduated" required placeholder="e.g. 2025" class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100">
+                        <h3 class="text-sm font-semibold text-brand-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-file-lines"></i> Select Documents Requested
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="documentOptions"></div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose of Request *</label>
+                            <select id="purpose" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300 outline-none bg-white">
+                                <option value="">Select Purpose</option>
+                                <option value="Employment">Employment</option>
+                                <option value="Further Studies">Further Studies</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Fulfillment Option *</label>
+                            <select id="deliveryOption" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300 outline-none bg-white">
+                                <option value="On-Campus Pickup">On-Campus Pickup (Free)</option>
+                                <option value="Courier Delivery">Courier Pick-up (+ ₱150)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <span class="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Amount:</span>
+                            <div class="text-3xl font-extrabold text-brand-900" id="totalAmount">₱ 0.00</div>
+                        </div>
+                        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-8 py-3 rounded-lg shadow transition">
+                            Proceed to Payment & Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: TRACKER -->
+        <section id="view-tracker" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 max-w-3xl mx-auto">
+                <div class="text-center max-w-xl mx-auto mb-8">
+                    <h2 class="text-2xl font-bold text-slate-900">Track Document Request</h2>
+                    <div class="mt-6 flex gap-2">
+                        <input type="text" id="trackSearchInput" placeholder="Enter Ref Code or Student ID" class="flex-1 text-sm p-3 rounded-lg border border-slate-300 font-mono uppercase">
+                        <button onclick="performSearch()" class="bg-brand-600 text-white font-semibold px-6 py-3 rounded-lg shadow">Search</button>
+                    </div>
+                </div>
+
+                <div id="trackerResultContainer" class="hidden space-y-6">
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs text-slate-400 font-mono" id="trackRefCode">--</span>
+                                <h3 class="text-lg font-bold text-slate-800" id="trackStudentName">--</h3>
+                                <p class="text-xs text-slate-500" id="trackDocsList">--</p>
+                            </div>
+                            <span id="trackStatusBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- GCASH MODAL -->
+    <div id="gcashModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar">
+            <button onclick="toggleModal('gcashModal')" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-xl font-bold text-center">GCash Payment Upload</h3>
+            <form id="gcashForm" onsubmit="handleGcashSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">GCash Ref No. (13 Digits) *</label>
+                    <input type="text" id="gcashRefNo" required pattern="\d{10,13}" class="w-full text-sm p-2.5 rounded-lg border">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Upload Receipt Screenshot *</label>
+                    <input type="file" id="gcashReceiptFile" accept="image/*" required onchange="previewReceiptImage(event)" class="w-full text-xs">
+                    <div id="receiptPreviewContainer" class="mt-2 hidden">
+                        <img id="receiptPreviewImg" src="" class="h-32 w-full object-cover rounded-lg border">
+                    </div>
+                </div>
+                <button id="gcashSubmitBtn" type="submit" class="w-full bg-gcash text-white font-semibold py-3 rounded-lg">Confirm & Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const DOCUMENT_TYPES = [
+            { id: 'tor', name: 'Transcript of Records (TOR)', price: 300, icon: 'fa-file-invoice' },
+            { id: 'cert_grad', name: 'Certificate of Graduation', price: 150, icon: 'fa-certificate' }
+        ];
+        let pendingFormSubmission = null;
+        let documentRequests = JSON.parse(localStorage.getItem('edulink_requests') || '[]');
+
+        window.onload = function() {
+            renderDocumentOptions();
+        };
+
+        function renderDocumentOptions() {
+            document.getElementById('documentOptions').innerHTML = DOCUMENT_TYPES.map(doc => `
+                <label class="flex items-center p-3 rounded-lg border border-slate-200 cursor-pointer bg-slate-50/50">
+                    <input type="checkbox" name="docSelect" value="${doc.id}" data-price="${doc.price}" onchange="calculateTotal()" class="w-4 h-4 text-brand-600">
+                    <div class="ml-3 flex-1 flex justify-between items-center text-xs">
+                        <span class="font-medium text-slate-800">${doc.name}</span>
+                        <span class="font-bold text-slate-600">₱${doc.price.toFixed(2)}</span>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        function calculateTotal() {
+            let total = Array.from(document.querySelectorAll('input[name="docSelect"]:checked')).reduce((sum, cb) => sum + parseFloat(cb.dataset.price), 0);
+            if (document.getElementById('deliveryOption').value.includes('Courier')) total += 150;
+            document.getElementById('totalAmount').innerText = `₱ ${total.toFixed(2)}`;
+            return total;
+        }
+
+        document.getElementById('deliveryOption').addEventListener('change', calculateTotal);
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('text-brand-600', 'border-brand-600'));
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('text-brand-600', 'border-brand-600');
+        }
+
+        function handleRequestSubmit(e) {
+            e.preventDefault();
+            const refCode = 'REF-' + Math.floor(100000 + Math.random() * 900000);
+            pendingFormSubmission = {
+                refCode,
+                studentId: document.getElementById('studentId').value,
+                fullName: document.getElementById('fullName').value,
+                contactNumber: document.getElementById('contactNumber').value,
+                amount: calculateTotal(),
+                status: 'Pending Payment Verification',
+                requestDate: new Date().toISOString()
+            };
+            toggleModal('gcashModal');
+        }
+
+        function previewReceiptImage(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('receiptPreviewImg').src = evt.target.result;
+                    document.getElementById('receiptPreviewContainer').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('gcashSubmitBtn').scrollIntoView({ behavior: 'smooth' }), 100);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleGcashSubmit(e) {
+            e.preventDefault();
+            pendingFormSubmission.gcashRef = document.getElementById('gcashRefNo').value;
+            pendingFormSubmission.receiptImg = document.getElementById('receiptPreviewImg').src;
+            documentRequests.unshift(pendingFormSubmission);
+            localStorage.setItem('edulink_requests', JSON.stringify(documentRequests));
+            toggleModal('gcashModal');
+            alert(`Request ${pendingFormSubmission.refCode} Submitted!`);
+        }
+
+        function performSearch() {
+            const query = document.getElementById('trackSearchInput').value.trim().toUpperCase();
+            const match = documentRequests.find(r => r.refCode === query || r.studentId.toUpperCase() === query);
+            if (match) {
+                document.getElementById('trackRefCode').innerText = match.refCode;
+                document.getElementById('trackStudentName').innerText = match.fullName;
+                document.getElementById('trackerResultContainer').classList.remove('hidden');
+            }
+        }
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    </script>
+</body>
+</html>
